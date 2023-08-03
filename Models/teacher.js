@@ -14,6 +14,10 @@ const teacherSchema = new mongoose.Schema(
         subject: {
             type: String
         },
+        isBlocked: {
+            type: Boolean,
+            default: false,
+        },
     }
 )
 
