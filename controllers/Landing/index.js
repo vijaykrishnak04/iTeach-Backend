@@ -63,7 +63,6 @@ export const OtpVerification = async (req, res, next) => {
       res.status(400).json({ error: 'Invalid OTP format' });
     }
 
-
     const StudentAuth = await Student.create({
       fullName,
       email,
@@ -82,42 +81,42 @@ export const OtpVerification = async (req, res, next) => {
 // login data
 export const login = async (req, res, next) => {
   try {
-    console.log(req.body)
-    const { email, password } = req.body
-    const student = await Student.findOne({ email: email });
+    const { email, password } = req.body;
+    const student = await Student.findOne({ email });
 
     if (!student) {
       return res.status(404).json({ message: "The user with the email does not exist" });
     }
-    if (student?.isBlocked === true) {
-      res.status(400).json({ message: "Sorry, this user is currently blocked. Please contact the administrator for further assistance. " })
-    } else {
 
-      const isMatch = await bcrypt.compare(password, student.password);
-      if (isMatch) {
-        const payload = {
-          id: student.id,
-          fullName: student.fullName,
-        };
-
-        const token = jwt.sign(payload, process.env.USER_SECRET_KEY, {
-          expiresIn: "7d",
-        });
-
-        res.json({
-          success: true,
-          id: student.id,
-          name: student.fullName,
-          token: `Bearer ${token}`,
-          role: student.role
-        });
-
-      } else {
-        res.status(401).json({ message: "Incorrect password" });
-      }
+    if (student.isBlocked) {
+      return res.status(400).json({ message: "Sorry, this user is currently blocked. Please contact the administrator for further assistance." });
     }
+
+    const isMatch = await bcrypt.compare(password, student.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
+
+    const payload = {
+      id: student.id,
+      fullName: student.fullName,
+    };
+
+    const token = jwt.sign(payload, process.env.USER_SECRET_KEY, {
+      expiresIn: process.env.TOKEN_EXPIRATION_TIME || "7d",
+    });
+
+    res.json({
+      success: true,
+      id: student.id,
+      name: student.fullName,
+      token: `Bearer ${token}`,
+      role: student.role,
+    });
+
   } catch (err) {
     console.error("Error occurred during login:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};

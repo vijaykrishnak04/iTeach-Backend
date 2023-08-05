@@ -27,12 +27,6 @@ const verifyTokenAdmin = (req, res, next) => {
 
 const verifyTeacherToken = (req, res, next) => {
 
-    //   const data =JSON.parse( req.headers.authorization);
-    //   console.log(data,"=====");
-    //   const{token} = data
-    //   console.log(token,"hello");
-
-
     const token = req.headers.authorization
    
     if (!token) {
