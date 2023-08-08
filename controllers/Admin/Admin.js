@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Teacher from '../../Models/teacher.js';
+import Course from "../../Models/course.js";
 import { json } from "express";
 
 dotenv.config();
@@ -131,6 +132,100 @@ export const unblockTeacher = async (req, res, next) => {
     return res.status(500).json('internal server error');
   }
 }
+
+
+//course management
+
+export const addCourse = async (req, res, next) => {
+  try {
+    const { courseTitle, courseDescription, lessons } = req.body;
+    console.log(req.body);
+    console.log(req.file)
+    const { path, filename } = req.file;
+
+    // Check if a course with the same title already exists
+    const courseExist = await Course.findOne({ title: courseTitle });
+    if (courseExist) {
+      return res.status(409).json("Course with this title already exists");
+    }
+
+    // Create a new course object using the Course model
+    const newCourse = new Course({
+      title: courseTitle,
+      description: courseDescription,
+      thumbnail: {
+        public_id: filename,
+        url: path,
+      },
+      lessons: lessons,
+    });
+
+    // Save the new course record to the database
+    const savedCourse = await newCourse.save();
+    res.status(200).json(savedCourse);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Internal server error");
+  }
+};
+
+export const getAllCourses = async (req, res, next) => {
+  try {
+    // Retrieve all courses from the database
+    const courses = await Course.find();
+
+    if (!courses || courses.length === 0) {
+      return res.status(404).json("No courses found");
+    }
+
+    res.status(200).json(courses);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Internal server error");
+  }
+};
+
+export const hideCourse = async (req, res, next) => {
+  try {
+    const Id = req.params.id.trim();
+    await Course.findByIdAndUpdate({ _id: Id }, { isHidden: true });
+    const updatedCourseList = await Course.find();
+    return res.status(200).json(updatedCourseList);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Internal server error");
+  }
+};
+
+export const unhideCourse = async (req, res, next) => {
+  try {
+    const Id = req.params.id.trim();
+    await Course.findByIdAndUpdate({ _id: Id }, { isHidden: false });
+    const updatedCourseList = await Course.find();
+    return res.status(200).json(updatedCourseList);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Internal server error");
+  }
+};
+
+export const deleteCourse = async (req, res, next) => {
+  try {
+    const Id = req.params.id.trim();
+    await Course.findByIdAndDelete({ _id: Id });
+    const updatedCourseList = await Course.find();
+    return res.status(200).json(updatedCourseList);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Internal server error");
+  }
+};
+
+
+
+
 
 
 
