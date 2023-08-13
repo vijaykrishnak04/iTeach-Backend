@@ -16,7 +16,14 @@ const lessonSchema = new mongoose.Schema({
         trim: true
     },
     pdfNotes: {
-        type: Buffer // storing the actual PDF file in the database. Alternatively, you could store a link to where the PDF is hosted.
+        public_id: {
+            type: String,
+            required: true
+        },
+        url: {
+            type: String,
+            required: true
+        },
     }
 });
 
@@ -36,11 +43,11 @@ const courseSchema = new mongoose.Schema({
         public_id: {
             type: String,
             required: true
-          },
-          url: {
+        },
+        url: {
             type: String,
             required: true
-          },
+        },
     },
     isHidden: {
         type: Boolean,
