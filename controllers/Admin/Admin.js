@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Teacher from '../../Models/teacher.js';
 import Course from "../../Models/course.js";
+import Class from "../../Models/ClassSchema.js"
 import { json } from "express";
 import { deleteFiles } from "../../config/cloudinary.js";
 
@@ -55,7 +56,6 @@ export const login = async (req, res, next) => {
 export const addTeacher = async (req, res, next) => {
   try {
     const { fullName, email, password, subject } = req.body;
-    console.log(req.body);
 
     // Create a new teacher object using the teacher model
     const teacherExist = await Teacher.findOne({ email: email })
@@ -63,8 +63,7 @@ export const addTeacher = async (req, res, next) => {
       return res.status(409).json("Teacher with this email already exist")
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newTeacher = new Teacher({
       fullName: fullName,
@@ -179,7 +178,6 @@ export const addCourse = async (req, res, next) => {
 
     // Save the new course record to the database
     const savedCourse = await newCourse.save();
-    console.log(savedCourse);
     return res.status(200).json(savedCourse);
 
   } catch (err) {
@@ -300,6 +298,70 @@ export const editCourse = async (req, res, next) => {
     res.status(500).json("Internal server error");
   }
 };
+
+
+//Syllabus
+
+export const addClass = async (req, res, next) => {
+  try {
+    const { name, price, subjects } = req.body;
+    console.log(req.body);
+
+    // Check if a syllabus with the same name already exists
+    const classExist = await Class.findOne({ name: name });
+    if (classExist) {
+      return res.status(409).json("Syllabus with this name already exists");
+    }
+
+    // Create subject objects from the input subjects (which may be an array of strings)
+    const subjectObjects = subjects.map(subjectName => ({ subjectName }));
+
+    // Create a new syllabus object using the Syllabus model
+    const newClass = new Class({
+      name: name,
+      price: price,
+      subjects: subjectObjects,
+    });
+
+    // Save the new syllabus record to the database
+    const savedClass = await newClass.save();
+    console.log(savedClass);
+    return res.status(200).json(savedClass);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Internal server error");
+  }
+};
+
+export const getClasses = async (req, res) => {
+  try {
+    const syllabusData = await Class.find()
+    if (syllabusData) {
+      return res.status(200).json(syllabusData)
+    } else {
+      return res.status(404).json("no data found")
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+export const deleteClass = async (req, res) => {
+  try {
+    const { id } = req.params; // Extracting the ID from the request parameters
+    await Class.findByIdAndDelete({ _id: id }).then(() => {
+      return res.status(200).json(id);
+    }).catch(() => {
+      return res.status(404).json("Class not found");
+    })
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json("An error occurred while deleting the syllabus");
+  }
+};
+
 
 
 

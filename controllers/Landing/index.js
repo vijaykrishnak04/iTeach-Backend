@@ -32,6 +32,7 @@ export const signup = async (req, res, next) => {
       ]
     });
     if (isExist) {
+      console.log("User exists");
       return res.status(400).json({ error: "User with this name, phone, or email already exists" });
     }
 
@@ -109,10 +110,9 @@ export const login = async (req, res, next) => {
 
     res.json({
       success: true,
-      id: student.id,
-      name: student.fullName,
-      token: `Bearer ${token}`,
-      role: student.role,
+      _id: student.id,
+      fullName: student.fullName,
+      token: `Bearer ${token}`,    
     });
 
   } catch (err) {

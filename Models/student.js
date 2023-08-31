@@ -20,82 +20,40 @@ const studentSchema = new mongoose.Schema(
         },
         phoneNumber: {
             type: Number,
-            unique:true
+            unique: true
         },
         aadharNumber: {
             type: String,
         },
-        isVerified:{
-            type:Boolean,
-            default:false
-        },
-        isRequested:{
-            type:Boolean,
-            default:false
+        isVerified: {
+            type: Boolean,
+            default: false
         },
         studentImage: {
             public_id: {
-              type: String,
+                type: String,
             },
             url: {
-              type: String,
+                type: String,
             },
-          },
-        parentName: {
-            type: String,
         },
-        parentMobileNumber: {
-            type: Number,
-        },
+
         address: {
-            houseName: {
-                type: String,
-            },
-            area: {
-                type: String,
-            },
-            landMark: {
-                type: String,
-            },
-            city: {
-                type: String,
-            },
-            state: {
-                type: String,
-            },
-            country: {
-                type: String,
-            },
-            pincode: {
-                type: Number,
-            },
+            type: String
         },
-        isSignUpWithGoogle:{
-            type:Boolean
-        },
-        image: {
-            url: {
-                type: String,
-            },
-            publicId: {
-                type: String,
-            },
+        isSignUpWithGoogle: {
+            type: Boolean
         },
         dateOfAdmission: {
             type: Date,
         },
-
         isBlocked: {
             type: Boolean,
             default: false,
         },
-        rejectedReason: {
-            type: String,
-            default: "none"
-        },
-        isProfile:{
-            type:String,
-            default:'notCompleted'
+        classRef: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Class'
         }
     },
     { timestamps: true }

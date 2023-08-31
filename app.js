@@ -6,6 +6,7 @@ import dbConnect from './config/dbConnection.js';
 import LandingPageRouter from './routes/LandingPageRoutes.js'
 import AdminRoutes from './routes/AdminRoutes.js';
 import TeacherRoutes from './routes/TeacherRoutes.js'
+import StudentRoutes from './routes/StudentRoutes.js'
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(
 app.use("/api",LandingPageRouter)
 app.use("/api/admin",AdminRoutes)
 app.use("/api/teacher",TeacherRoutes)
+app.use("/api/student",StudentRoutes)
 
 app.listen(process.env.PORT_NO, (error) => {
   if (error) {

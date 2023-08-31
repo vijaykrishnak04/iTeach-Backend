@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-    login, addTeacher, getTeachers, deleteTeacher, blockTeacher, unblockTeacher, addCourse, getAllCourses, hideCourse, deleteCourse, unhideCourse, editCourse
+    login, addTeacher, getTeachers, deleteTeacher, blockTeacher, unblockTeacher, addCourse, getAllCourses, hideCourse, deleteCourse, unhideCourse, editCourse, getClasses, addClass, deleteClass
 } from '../controllers/Admin/Admin.js';
 import verifyToken from '../Middlewares/Authorization.js'
 import { uploadFiles } from '../config/cloudinary.js';
@@ -24,6 +24,10 @@ AdminRouter.patch('/unhide-course/:id', verifyToken.verifyTokenAdmin, unhideCour
 AdminRouter.delete('/delete-course/:id', verifyToken.verifyTokenAdmin, deleteCourse);
 AdminRouter.put('/edit-course/:id', verifyToken.verifyTokenAdmin, uploadFiles, editCourse);
 
+//syllabus
+AdminRouter.get('/get-syllabus', verifyToken.verifyTokenAdmin, getClasses);
+AdminRouter.post('/add-syllabus', verifyToken.verifyTokenAdmin, addClass);
+AdminRouter.delete('/delete-syllabus/:id', verifyToken.verifyTokenAdmin, deleteClass);
 
 
 
