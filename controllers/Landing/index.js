@@ -2,21 +2,14 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
 import { sendMail } from '../../helpers/mailer.js'
-import Otp from "../../models/otp.js";
-import Student from "../../Models/student.js";
+import Otp from "../../models/OtpSchema.js";
+import Student from "../../Models/StudentSchema.js";
+import Banner from "../../Models/BannerSchema.js";
+import Course from "../../Models/CourseSchema.js";
+import Teacher from "../../Models/TeacherSchema.js";
 
 
 dotenv.config()
-
-
-//fetch data
-
-
-// get single hostel data
-
-
-// fetch room data
-
 
 // singup data
 export const signup = async (req, res, next) => {
@@ -112,7 +105,7 @@ export const login = async (req, res, next) => {
       success: true,
       _id: student.id,
       fullName: student.fullName,
-      token: `Bearer ${token}`,    
+      token: `Bearer ${token}`,
     });
 
   } catch (err) {
@@ -120,3 +113,51 @@ export const login = async (req, res, next) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+//banner
+
+export const getBanners = async (req, res, next) => {
+  try {
+    const banners = await Banner.find()
+
+    if (!banners) return res.status(404).json("No Banners found")
+
+    return res.status(200).json(banners)
+
+  } catch (err) {
+    return res.status(500).json("An error occurred while getting banners");
+  }
+}
+
+//courses
+
+export const getCourses = async (req, res, next) => {
+  try {
+    const courses = await Course.find({ isHidden: false });
+    if (!courses || courses.length === 0) {
+      return res.status(409).json('no data found');
+    } else {
+      return res.status(200).json(courses);
+    }
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json('internal server error');
+  }
+}
+
+//get tutors
+
+export const getTutors = async (req, res, next) => {
+  try {
+    const tutors = await Teacher.find({ isBlocked: false })
+    if (!tutors) {
+      return res.status(404).json("No tutors found")
+    } else {
+      return res.status(200).json(tutors)
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json('internal server error');
+  }
+}

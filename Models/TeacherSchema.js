@@ -8,6 +8,14 @@ const teacherSchema = new mongoose.Schema(
             type:String,
             unique: true
         },
+        teacherImage: {
+            public_id: {
+                type: String,
+            },
+            url: {
+                type: String,
+            },
+        },
         password:{
             type:String
         },

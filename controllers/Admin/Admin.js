@@ -2,13 +2,53 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import Teacher from '../../Models/teacher.js';
-import Course from "../../Models/course.js";
+import Teacher from '../../Models/TeacherSchema.js';
+import Course from "../../Models/CourseSchema.js";
 import Class from "../../Models/ClassSchema.js"
+import Exam from "../../Models/ExamSchema.js"
+import Student from "../../Models/StudentSchema.js"
 import { json } from "express";
 import { deleteFiles } from "../../config/cloudinary.js";
+import Banner from "../../Models/BannerSchema.js";
 
 dotenv.config();
+
+
+//dashboard 
+export const getDashboardData = async (req, res, next) => {
+  try {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const studentsTotal = await Student.find().count();
+    const studentsAddedToday = await Student.find({
+      createdAt: {
+        $gte: startOfToday,
+        $lte: endOfToday
+      }
+    }).count();
+
+    const courses = await Course.find().count();
+    const classes = await Class.find().count();
+    const teachers = await Teacher.find().count();
+
+    // Modify this to send all the data you need, not just studentsTotal
+    res.status(200).json({
+      totalStudents: 300,
+      studentsAddedToday: 50,
+      totalCourses: courses,
+      totalClasses: classes,
+      totalTeachers: teachers
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("internal server error");
+  }
+}
 
 
 // login data
@@ -300,7 +340,7 @@ export const editCourse = async (req, res, next) => {
 };
 
 
-//Syllabus
+//class
 
 export const addClass = async (req, res, next) => {
   try {
@@ -313,10 +353,16 @@ export const addClass = async (req, res, next) => {
       return res.status(409).json("Syllabus with this name already exists");
     }
 
-    // Create subject objects from the input subjects (which may be an array of strings)
-    const subjectObjects = subjects.map(subjectName => ({ subjectName }));
+    // Check for duplicate subjects in the input array
+    const uniqueSubjects = [...new Set(subjects)];
+    if (uniqueSubjects.length !== subjects.length) {
+      return res.status(400).json("Duplicate subjects provided");
+    }
 
-    // Create a new syllabus object using the Syllabus model
+    // Create subject objects from the unique subjects
+    const subjectObjects = uniqueSubjects.map(subjectName => ({ subjectName }));
+
+    // Create a new syllabus object using the Class model
     const newClass = new Class({
       name: name,
       price: price,
@@ -334,6 +380,7 @@ export const addClass = async (req, res, next) => {
   }
 };
 
+
 export const getClasses = async (req, res) => {
   try {
     const syllabusData = await Class.find()
@@ -349,18 +396,103 @@ export const getClasses = async (req, res) => {
 
 export const deleteClass = async (req, res) => {
   try {
-    const { id } = req.params; // Extracting the ID from the request parameters
-    await Class.findByIdAndDelete({ _id: id }).then(() => {
-      return res.status(200).json(id);
-    }).catch(() => {
+    const { id } = req.params;
+
+    // Find the class to get exams and students arrays
+    const classToDelete = await Class.findById(id);
+    if (!classToDelete) {
       return res.status(404).json("Class not found");
-    })
+    }
+
+    // Delete associated exams
+    await Exam.deleteMany({ _id: { $in: classToDelete.exams } });
+
+    // Update students by removing class reference
+    await Student.updateMany(
+      { _id: { $in: classToDelete.students } },
+      { $unset: { classRef: "" } }
+    );
+
+    // Delete the class itself
+    await Class.findByIdAndDelete(id);
+
+    return res.status(200).json(id);
 
   } catch (err) {
     console.log(err);
     return res.status(500).json("An error occurred while deleting the syllabus");
   }
 };
+
+//Banner 
+
+export const getBanners = async (req, res, next) => {
+  try {
+    const banners = await Banner.find()
+
+    if (!banners) return res.status(404).json("No Banners found")
+
+    return res.status(200).json(banners)
+
+  } catch (err) {
+    return res.status(500).json("An error occurred while getting banners");
+  }
+}
+
+export const addBanner = async (req, res, next) => {
+  try {
+    const filename = req?.files?.[0]?.filename || null;
+    const path = req?.files?.[0]?.path || null;
+
+    if (!filename || !path) {
+      return res.status(400).json("No image provided");
+    }
+
+    const bannerImage = {
+      public_id: filename,
+      url: path,
+    };
+
+    const savedBanner = new Banner({
+      bannerImage: bannerImage,
+    });
+
+    await savedBanner.save();
+
+    return res.status(200).json(savedBanner);
+  } catch (err) {
+    console.error(err);  // Log the error for debugging purposes.
+    return res.status(500).json("An error occurred while adding the banner");
+  }
+};
+
+export const deleteBanner = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const banner = await Banner.findById(id);
+
+    if (!banner) {
+      return res.status(404).json({ message: "Banner not found" });
+    }
+
+    await deleteFiles([banner.bannerImage.public_id]);
+    await banner.deleteOne()
+
+    return res.status(200).json({ message: "Banner deleted successfully" });
+
+  } catch (err) {
+    console.error(err);  // Log the error for debugging purposes.
+
+    if (err.kind === 'ObjectId') {
+      return res.status(400).json({ message: "Invalid banner ID" });
+    }
+
+    return res.status(500).json({ message: "An error occurred while deleting the banner" });
+  }
+}
+
+
+
 
 
 

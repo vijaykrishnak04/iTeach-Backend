@@ -5,8 +5,7 @@ const lessonSchema = new mongoose.Schema({
     lessonTitle: {
         type: String,
         required: true,
-        trim: true,
-        unique: true
+        trim: true
     },
     videoURL: {
         type: String,
@@ -55,7 +54,6 @@ const classSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        unique: true,
         uppercase: true
     },
 
@@ -69,12 +67,25 @@ const classSchema = new mongoose.Schema({
     students: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Student'
+    }],
+    exams: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Exam'
+    }],
+    schedules: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Schedule'
     }]
-
 });
+
 
 // Compound Index for ensuring unique subject names within a class
 classSchema.index({ 'name': 1, 'subjects.subjectName': 1 }, { unique: true });
+// Compound Index for ensuring unique lesson titles within a chapter
+chapterSchema.index({ 'chapterTitle': 1, 'lessons.lessonTitle': 1 }, { unique: true });
+// Ensure unique chapter titles within a subject
+subjectSchema.index({ 'subjectName': 1, 'chapters.chapterTitle': 1 }, { unique: true });
+
 
 const Class = mongoose.model('Class', classSchema);
 

@@ -54,7 +54,25 @@ const studentSchema = new mongoose.Schema(
         classRef: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Class'
-        }
+        },
+        exam: [{
+            _id: {
+                type: String,
+                required: true
+            },
+            SubjectName: {
+                type: String,
+                required: true
+            },
+            name: {
+                type: String,
+                required: true
+            },
+            marks: {
+                type: String,
+                required: true
+            }
+        }],
     },
     { timestamps: true }
 );
