@@ -1,19 +1,61 @@
 import Course from "../../Models/CourseSchema.js";
+import Student from "../../Models/StudentSchema.js";
 
 export const getCourses = async (req, res, next) => {
     try {
-        const courses = await Course.find({ isHidden: false });
-        if (!courses || courses.length === 0) {
-            return res.status(409).json('no data found');
-        } else {
-            return res.status(200).json(courses);
+        const studentId = req.params.id;
+
+        const student = await Student.findById(studentId, 'courses');
+        if (!student) {
+            return res.status(404).json('Student not found');
         }
+
+        const courses = await Course.find({
+            _id: { $nin: student.courses },
+            isHidden: false
+        });
+
+        if (!courses || courses.length === 0) {
+            return res.status(404).json('No data found');
+        }
+
+        return res.status(200).json(courses);
 
     } catch (err) {
         console.log(err);
-        return res.status(500).json('internal server error');
+        return res.status(500).json('Internal server error');
     }
-}
+};
+
+
+export const getPurchasedCourses = async (req, res, next) => {
+    try {
+        const studentId = req.params.id;
+
+
+        const student = await Student.findById(studentId).populate({
+            path: 'courses'
+        });
+
+        if (!student) {
+            return res.status(404).json('Student not found');
+        }
+
+        const courses = student.courses;
+
+        if (!courses || courses.length === 0) {
+            return res.status(404).json('No data found');
+        }
+
+        return res.status(200).json(courses);
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json('Internal server error');
+    }
+};
+
+
 
 export const getCourse = async (req, res, next) => {
     try {
@@ -30,3 +72,25 @@ export const getCourse = async (req, res, next) => {
         return res.status(500).json('internal server error');
     }
 }
+
+export const purchaseCourse = async (studentId, courseId) => {
+    try {
+        const updatedStudent = await Student.findOneAndUpdate(
+            { _id: studentId }, // find a document with this filter
+            { $addToSet: { courses: courseId } }, // add courseId to courses array if not already present
+            { new: true, runValidators: true } // options: return updated one, and run model validations
+        );
+
+        if (!updatedStudent) {
+            throw new Error('Student not found');
+        }
+
+    } catch (err) {
+        console.log(err);
+        throw new Error('Internal server error');
+    }
+}
+
+
+
+

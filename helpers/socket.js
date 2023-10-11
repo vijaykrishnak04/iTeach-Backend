@@ -28,14 +28,14 @@ const initSocketIO = (server) => {
                         // Update existing chat
                         return Chat.findOneAndUpdate(
                             { _id: chat._id },
-                            { $push: { messages: {recieverId, senderId, text, timestamp} } },
+                            { $push: { messages: { recieverId, senderId, text, timestamp } } },
                             { new: true }
                         );
                     } else {
                         // Create a new chat
                         return Chat.create({
                             participants: [recieverId, senderId],
-                            messages: [{recieverId, senderId, text, timestamp}]
+                            messages: [{ recieverId, senderId, text, timestamp }]
                         });
                     }
                 })

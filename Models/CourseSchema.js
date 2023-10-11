@@ -18,11 +18,9 @@ const lessonSchema = new mongoose.Schema({
     pdfNotes: {
         public_id: {
             type: String,
-            required: true
         },
         url: {
             type: String,
-            required: true
         },
     }
 });
@@ -39,6 +37,10 @@ const courseSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    price: {
+        type: Number,
+        required: true
+    },
     thumbnail: {
         public_id: {
             type: String,
@@ -54,6 +56,8 @@ const courseSchema = new mongoose.Schema({
         default: false,
     },
     lessons: [lessonSchema] // Embedded sub-document
+}, {
+    timestamps: true
 });
 
 const Course = mongoose.model('Course', courseSchema);

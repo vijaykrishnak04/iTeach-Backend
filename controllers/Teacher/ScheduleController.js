@@ -1,5 +1,7 @@
 import Class from "../../Models/ClassSchema.js";
 import Schedule from "../../Models/SchedulesSchema.js";
+import validator from 'validator';
+import xss from 'xss';
 
 export const getSchedules = async (req, res, next) => {
     try {
@@ -17,40 +19,46 @@ export const getSchedules = async (req, res, next) => {
 
 export const addSchedule = async (req, res, next) => {
     try {
-        const { title, description, time, classType, selectedClassAndSubject } = req.body;
+        let { title, description, time, classType, selectedClassAndSubject, link } = req.body;
 
-        // Check if an schedule with the same title already exists
-        const scheduleExist = await Schedule.findOne({ title: title });
-        if (scheduleExist) {
-            return res.status(409).json("Schedule with this title already exists");
+        // Input Validation
+        if (validator.isEmpty(title) || validator.isEmpty(description) || validator.isEmpty(time) ||
+            validator.isEmpty(classType) || !selectedClassAndSubject || validator.isEmpty(link)) {
+            return res.status(400).json("All fields are required");
         }
 
-        // Create a new schedule object using the schedule model
+        // Prevent XSS attacks by sanitizing inputs
+        title = xss(title);
+        description = xss(description);
+        time = xss(time);
+        classType = xss(classType);
+        link = xss(link);
+
+        // Create and Save Schedule, and also update the Class in one atomic operation
         const newSchedule = new Schedule({
-            title: title,
-            description: description,
-            time: time,
-            type: classType,
-            class: selectedClassAndSubject
+            title, description, time, type: classType, Link: link, class: selectedClassAndSubject
         });
 
-        // Save the new exam record to the database
         const savedSchedule = await newSchedule.save();
 
-        // Update the Class collection by appending the new exam's ID to the selectedClass's exams array
-        await Class.findByIdAndUpdate(
+        const updatedClass = await Class.findByIdAndUpdate(
             selectedClassAndSubject.classId,
-            { $push: { schedules: savedSchedule._id } },
-            { new: true, useFindAndModify: false }
+            { $addToSet: { schedules: savedSchedule._id } }, // $addToSet will only add if it doesn't already exist
+            { new: true, useFindAndModify: false, upsert: true }
         );
 
-        return res.status(200).json(savedSchedule)
+        if (!updatedClass) {
+            return res.status(404).json("Class not found or failed to update");
+        }
+
+        return res.status(200).json(savedSchedule);
 
     } catch (err) {
         console.log(err);
         return res.status(500).json('Internal server error');
     }
-}
+};
+
 
 export const deleteSchedule = async (req, res, next) => {
     try {

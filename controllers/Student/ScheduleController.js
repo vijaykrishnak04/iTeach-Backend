@@ -1,16 +1,22 @@
 import mongoose from "mongoose";
 import Schedule from "../../Models/SchedulesSchema.js";
+import Class from "../../Models/ClassSchema.js";
 
 export const getSchedules = async (req, res, next) => {
     try {
-        const ids = req.query.ids.split(',').map(id => new mongoose.Types.ObjectId(id));
-        const schedules = await Schedule.find({
-            _id: { $in: ids }
-        });
-        if (schedules.length === 0) {
-            return res.status(409).json('No exams data found for the provided IDs.');
+        const id = req.query.id;
+        const schedules = await Class.findById(id, 'schedules').populate('schedules');
+
+        console.log(schedules);  // Keeping it for debug purposes
+
+        if (!schedules) {
+            return res.status(404).json('No schedules found for the provided ID.');
+        }
+
+        if (schedules.schedules.length === 0) {
+            return res.status(404).json('No schedules data found for the provided IDs.');
         } else {
-            return res.status(200).json(schedules);
+            return res.status(200).json(schedules.schedules);
         }
     } catch (err) {
         console.error(err);
@@ -18,32 +24,42 @@ export const getSchedules = async (req, res, next) => {
     }
 }
 
+
 export const getTodaySchedules = async (req, res, next) => {
     try {
-        const ids = req.query.ids.split(',').map(id => new mongoose.Types.ObjectId(id));
-        // Create new Date object for today's date
-        const today = new Date();
-        // Set the hours, minutes, seconds, and milliseconds to zero
-        today.setHours(0, 0, 0, 0);
+        const id = req.params.id;
 
-        // Create new Date object for tomorrow's date by adding one day to today
+        // Create new Date objects for today and tomorrow
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
 
-        // Query MongoDB to find all schedules for today
-        const schedules = await Schedule.find({
-            _id: { $in: ids },
-            date: {
-                $gte: today,
-                $lt: tomorrow
+        // Find the class and populate its schedules
+        const classObj = await Class.findById(id).populate({
+            path: 'schedules',
+            match: {
+                time: {
+                    $gte: today,
+                    $lt: tomorrow
+                }
             }
         });
 
-        if (schedules.length === 0) {
-            return res.status(409).json('No schedules found for today.');
-        } else {
-            return res.status(200).json(schedules);
+        if (!classObj) {
+            return res.status(404).json('No class found for the provided ID.');
         }
+
+
+        // Extract today's schedules
+        const todaySchedules = classObj.schedules;
+
+        if (todaySchedules.length === 0) {
+            return res.status(404).json('No schedules found for today.');
+        } else {
+            return res.status(200).json(todaySchedules);
+        }
+
     } catch (err) {
         console.error(err);
         res.status(500).json("Internal server error");

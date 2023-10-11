@@ -52,8 +52,13 @@ const studentSchema = new mongoose.Schema(
             default: false,
         },
         classRef: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Class'
+            class: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Class'
+            },
+            joinedDate: {
+                type: Date,
+            }
         },
         exam: [{
             _id: {
@@ -72,6 +77,10 @@ const studentSchema = new mongoose.Schema(
                 type: String,
                 required: true
             }
+        }],
+        courses: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Course'
         }],
     },
     { timestamps: true }

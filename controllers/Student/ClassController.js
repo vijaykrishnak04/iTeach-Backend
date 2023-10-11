@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Class from "../../Models/ClassSchema.js";
 import Student from "../../Models/StudentSchema.js";
 
@@ -15,56 +16,58 @@ export const getClasses = async (req, res, next) => {
     }
 }
 
-export const addOrChangeClass = (studentId, classId, res) => {
-    // First, fetch the student to get the prevClassId from classRef
-    Student.findById(studentId)
-        .then(student => {
-            if (!student) {
-                return res.status(404).json({ success: false, message: 'Student not found' });
-            }
 
-            const prevClassId = student.classRef;
+export const addOrChangeClass = async (studentId, classId) => {
+    try {
+        const options = { new: true };
 
-            // If there's a previous class, remove the student from that class
-            if (prevClassId) {
-                Class.findByIdAndUpdate(prevClassId, { $pull: { students: studentId } }, { new: true })
-                    .then(updatedPrevClass => {
-                        if (!updatedPrevClass) {
-                            return res.status(404).json({ success: false, message: 'Previous class not found' });
-                        }
-                        // Continue with the rest of the logic
-                        proceedWithAddingToNewClass(studentId, classId, res);
-                    })
-                    .catch(err => {
-                        return res.status(500).json({ success: false, message: err.message });
-                    });
-            } else {
-                // If no prevClassId, directly proceed to add the student to the new class
-                proceedWithAddingToNewClass(studentId, classId, res);
-            }
-        })
-        .catch(err => {
-            return res.status(500).json({ success: false, message: err.message });
-        });
-}
+        // Find the student
+        const student = await Student.findById(studentId);
+        if (!student) {
+            throw new Error('Student not found');
+        }
 
-export const proceedWithAddingToNewClass = (studentId, classId, res) => {
-    Student.findByIdAndUpdate(studentId, { classRef: classId, exam: [] }, { new: true })
-        .then(updatedStudent => {
-            if (!updatedStudent) {
-                return res.status(404).json({ success: false, message: 'Student not found' });
-            }
+        // Remove student from previous class, if exists
+        const prevClassId = student.classRef?._id;
+        if (prevClassId) {
+            await Class.findByIdAndUpdate(prevClassId, { $pull: { students: studentId } }, options);
+        }
 
-            // Now update the Class with the studentId
-            return Class.findByIdAndUpdate(classId, { $push: { students: studentId } }, { new: true })
-                .then(updatedClass => {
-                    if (!updatedClass) {
-                        return res.status(404).json({ success: false, message: 'Class not found' });
-                    }
-                    return res.json({ success: true, updatedStudent });
-                });
-        })
-        .catch(err => {
-            return res.status(500).json({ success: false, message: err.message });
-        });
-}
+        // Prepare the new class information, including the joinedDate
+        const newClassInfo = {
+            class: classId,
+            joinedDate: new Date()  // Set joinedDate to the current date and time
+        };
+
+        // Update student's class
+        const updatedStudent = await Student.findByIdAndUpdate(
+            studentId,
+            { classRef: newClassInfo, exam: [] },
+            options
+        );
+
+        if (!updatedStudent) {
+            throw new Error('Failed to update student');
+        }
+
+        // Add student to the new class
+        const updatedClass = await Class.findByIdAndUpdate(
+            classId,
+            { $push: { students: studentId } },
+            options
+        );
+
+        if (!updatedClass) {
+            throw new Error('Failed to update class');
+        }
+
+        return updatedStudent;
+
+    } catch (error) {
+        console.log(error);
+        throw new Error('Internal server error');
+    }
+};
+
+
+

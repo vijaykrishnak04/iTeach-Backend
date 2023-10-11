@@ -48,6 +48,11 @@ export const getChatList = async (req, res, next) => {
                 }
             },
             {
+                $sort: {
+                    updatedAt: -1
+                }
+            },
+            {
                 $project: {
                     teacherId: {
                         $arrayElemAt: [
@@ -61,19 +66,19 @@ export const getChatList = async (req, res, next) => {
                             0
                         ]
                     },
-                    messages: 1   // Adding messages for the chat between the two participants
+                    messages: 1
                 }
             },
             {
                 $lookup: {
-                    from: "teachers",       // Assuming 'students' is the name of the students collection
+                    from: "teachers",
                     localField: "teacherId",
                     foreignField: "_id",
                     as: "teacherInfo"
                 }
             },
             {
-                $unwind: "$teacherInfo"  // Flatten the resulting studentInfo array for easier access
+                $unwind: "$teacherInfo"
             },
             {
                 $project: {

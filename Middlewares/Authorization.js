@@ -1,12 +1,13 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import Student from '../Models/StudentSchema.js';
+import Teacher from '../Models/TeacherSchema.js';
 
 dotenv.config();
 
 const verifyToken = (role) => {
-    return (req, res, next) => {
+    return async (req, res, next) => {
         const token = req.headers.authorization;
-
         if (!token) {
             return res.status(401).json({ message: 'Authorization token is missing!' });
         }
@@ -28,6 +29,18 @@ const verifyToken = (role) => {
 
         try {
             const decoded = jwt.verify(token.split(' ')[1], secret);
+            if (role === 'student') {
+                const student = await Student.findById(decoded.id);  // Replace with your correct ID field
+                if (student && student.isBlocked) {
+                    return res.status(401).json({ message: 'This student is blocked.' });
+                }
+            }
+            if (role === 'teacher') {
+                const teacher = await Teacher.findById(decoded._id);  // Replace with your correct ID field
+                if (teacher && teacher.isBlocked) {
+                    return res.status(401).json({ message: 'This teacher is blocked.' });
+                }
+            }
             req.user = decoded;
             next();
         } catch (error) {

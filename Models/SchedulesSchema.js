@@ -4,7 +4,8 @@ const ScheduleSchema = new mongoose.Schema({
     class: {
         classId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Class'
+            ref: 'Class',
+            required:true
         },
         className: {
             type: String,
@@ -12,7 +13,8 @@ const ScheduleSchema = new mongoose.Schema({
         },
         subjectId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Class'
+            ref: 'Class',
+            required: true
         },
         subjectName: {
             type: String,
@@ -28,13 +30,14 @@ const ScheduleSchema = new mongoose.Schema({
         type: String,
         reuired: true
     },
+    Link: {
+        type: String,
+    },
     time: {
         type: Date,
-        required: true
     },
     type: {
         type: String,
-        required: true
     }
 })
 

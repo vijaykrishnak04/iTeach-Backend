@@ -18,11 +18,10 @@ const lessonSchema = new mongoose.Schema({
     pdfNotes: {
         public_id: {
             type: String,
-            required: true
+
         },
         url: {
             type: String,
-            required: true
         },
     }
 });
@@ -44,7 +43,8 @@ const subjectSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        uppercase: true
+        uppercase: true,
+
     },
     chapters: [chapterSchema] // Embed chapters inside subject
 });
@@ -64,6 +64,20 @@ const classSchema = new mongoose.Schema({
         required: true,
         min: [1, 'Price should be greater than 0']  // Ensuring price is positive and greater than zero.
     },
+    description: {
+        type: String,
+        required: true
+    },
+    thumbnail: {
+        public_id: {
+            type: String,
+            required: true
+        },
+        url: {
+            type: String,
+            required: true
+        }
+    },
     students: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Student'
@@ -77,14 +91,6 @@ const classSchema = new mongoose.Schema({
         ref: 'Schedule'
     }]
 });
-
-
-// Compound Index for ensuring unique subject names within a class
-classSchema.index({ 'name': 1, 'subjects.subjectName': 1 }, { unique: true });
-// Compound Index for ensuring unique lesson titles within a chapter
-chapterSchema.index({ 'chapterTitle': 1, 'lessons.lessonTitle': 1 }, { unique: true });
-// Ensure unique chapter titles within a subject
-subjectSchema.index({ 'subjectName': 1, 'chapters.chapterTitle': 1 }, { unique: true });
 
 
 const Class = mongoose.model('Class', classSchema);

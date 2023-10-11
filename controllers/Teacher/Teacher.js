@@ -1,11 +1,9 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Teacher from '../../Models/TeacherSchema.js';
-import Class from "../../Models/ClassSchema.js";
-import Exam from "../../Models/ExamSchema.js";
-import Student from "../../Models/StudentSchema.js";
+import validator from 'validator';
+import xss from 'xss';
 
 dotenv.config(); // Load environment variables
 
@@ -58,87 +56,94 @@ export const login = async (req, res, next) => {
 
 export const editProfile = async (req, res, next) => {
   try {
-    console.log(req.body);
-    console.log(req.files);
     const { 0: { filename = null, path = null } = {} } = req.files || {};
     const teacherImage = (filename && path) ? { public_id: filename, url: path } : null;
+    const { _id, fullName, email } = req.body;
 
-    const teacher = await Teacher.findById(req.body._id)
+    // Input Validation
+    if (!validator.isMongoId(_id)) {
+      return res.status(400).json("Invalid ID");
+    }
 
-    if (!teacher) return res.status(404).json("teacher not found")
+    // Sanitize input to prevent XSS attacks
+    const sanitizedFullName = xss(fullName);
+    const sanitizedEmail = xss(email);
+
+    let updateFields = {};
 
     if (teacherImage) {
-      teacher.teacherImage = teacherImage;
+      updateFields.teacherImage = teacherImage;
     }
-    teacher.fullName = req.body.fullName || teacher.fullName;
-    teacher.email = req.body.email || teacher.email;
 
-    // Save the updated teacher record to the database
-    await teacher.save();
+    if (sanitizedFullName) updateFields.fullName = sanitizedFullName;
+    if (sanitizedEmail) updateFields.email = sanitizedEmail;
 
-    return res.status(200).json(teacher);
+    const updatedTeacher = await Teacher.findOneAndUpdate(
+      { _id },
+      { $set: updateFields },
+      { new: true, runValidators: true, context: 'query' }
+    );
 
+    if (!updatedTeacher) {
+      return res.status(404).json("Teacher not found or failed to update");
+    }
+
+    return res.status(200).json(updatedTeacher);
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};
 
 
-
-export const getStudents = async (req, res, next) => {
+export const changePassword = async (req, res, next) => {
   try {
-    const students = await Student.aggregate([
-      {
-        $match: { isBlocked: false } // Only get students who aren't blocked
-      },
-      {
-        $project: {
-          studentId: "$_id",               // Rename _id to studentId
-          studentInfo: {
-            fullName: "$fullName",
-            studentImage: {
-              $cond: { if: "$studentImage", then: "$studentImage.url", else: null }
-            }
-          }
-        }
+      // Getting the student's _id and credentials from the request
+      const { id } = req.params;
+      const { currentPassword, newPassword } = req.body;
+
+      // Find the student using the _id
+      const teacher = await Teacher.findById(id);
+
+      // If student is not found, return an error
+      if (!teacher) {
+          return res.status(404).json('Teacher not found');
       }
-    ]);
 
-    if (students && students.length > 0) {
-      return res.status(200).json(students);
-    }
+      // Check if the currentPassword matches the stored hash
+      const isMatch = await bcrypt.compare(currentPassword, teacher.password);
 
-    return res.status(404).json("No Students data found");
+      if (!isMatch) {
+          return res.status(400).json('Incorrect current password');
+      }
 
-  } catch (err) {
-    // Make sure to handle the error appropriately
-    return res.status(500).json({ message: "An error occurred", error: err.message });
-  }
-}
+      // New password and current password should not be the same
+      if (newPassword === currentPassword) {
+          return res.status(400).json('New password should be different from the current password');
+      }
 
+      // Hash the new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedNewPassword = await bcrypt.hash(newPassword, salt);
 
-export const getStudentsByIds = async (req, res, next) => {
-  try {
-    // Extract the ids query parameter and split by commas to get an array of IDs
-    const ids = req.query.ids.split(',').map(id => new mongoose.Types.ObjectId(id));
-    // Fetch the exams by their IDs
-    const students = await Student.find({
-      _id: { $in: ids }
-    });
+      // Update the password
+      teacher.password = hashedNewPassword;
 
-    // Check if any exams were found
-    if (students.length === 0) {
-      return res.status(409).json('No students data found for the provided IDs.');
-    } else {
-      return res.status(200).json(students);
-    }
+      // Save the updated student record to the database
+      await teacher.save();
+
+      return res.status(200).json('Password changed successfully');
 
   } catch (err) {
-    console.log(err);
-    return res.status(500).json('Internal server error');
+      console.log(err);
+      return res.status(500).json('Internal server error');
   }
-}
+};
+
+
+
+
 
 
 
