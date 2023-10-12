@@ -12,14 +12,17 @@ export const addClass = async (req, res, next) => {
 
     name = xss(name);
     description = xss(description);
-    if (typeof price !== 'number') {
+    const parsedCoursePrice = parseFloat(coursePrice);
+
+    if (isNaN(parsedCoursePrice)) {
       return res.status(400).json("Price should be a number");
     }
+
     if (!Array.isArray(subjects) || !subjects.every(sub => typeof sub === 'string')) {
       return res.status(400).json("Invalid subjects format");
     }
 
-    subjects = subjects.map(sub => xss(sub)); 
+    subjects = subjects.map(sub => xss(sub));
 
     const filename = req?.files?.[0]?.filename || null;
     const filePath = req?.files?.[0]?.path || null;
@@ -92,7 +95,7 @@ export const deleteClass = async (req, res) => {
     if (!validator.isMongoId(id)) {
       return res.status(400).json("Invalid Id");
     }
-    
+
     // Find the class to get exams and students arrays
     const classToDelete = await Class.findById(id);
     if (!classToDelete) {

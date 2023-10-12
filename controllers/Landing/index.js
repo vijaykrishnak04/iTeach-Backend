@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
 import { sendMail } from '../../helpers/mailer.js'
-import Otp from "../../models/OtpSchema.js";
+import Otp from "../../Models/OtpSchema.js"; 
 import Student from "../../Models/StudentSchema.js";
 import Banner from "../../Models/BannerSchema.js";
 import Course from "../../Models/CourseSchema.js";
@@ -15,7 +15,7 @@ dotenv.config()
 export const signup = async (req, res, next) => {
   console.log(req.body)
   try {
-    const { fullName, email, phoneNumber, password, confirmPassword } = req.body
+    const { fullName, email, phoneNumber, password } = req.body
 
     const isExist = await Student.findOne({
       $or: [

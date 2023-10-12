@@ -3,7 +3,7 @@ import Student from "../../Models/StudentSchema.js";
 import bcrypt from 'bcrypt';
 import { deleteFiles } from "../../config/cloudinary.js";
 import { sendMail } from "../../helpers/mailer.js";
-import Otp from "../../models/OtpSchema.js";
+import Otp from "../../Models/OtpSchema.js";
 import xss from "xss";
 import validator from "validator";
 

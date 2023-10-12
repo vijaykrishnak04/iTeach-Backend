@@ -4,7 +4,7 @@ import Chat from '../Models/ChatSchema.js';
 const initSocketIO = (server) => {
     const io = new Server(server, {
         cors: {
-            origin: "http://localhost:5173"
+            origin: "https://i-teach.netlify.app/"
         }
     });
 

@@ -18,7 +18,15 @@ dbConnect();
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+//cors options
+const corsOptions = {
+  origin: 'https://i-teach.netlify.app',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 
 app.use("/api", LandingPageRouter);
 app.use("/api/admin", AdminRoutes);
