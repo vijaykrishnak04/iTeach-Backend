@@ -29,11 +29,6 @@ export const addClass = async (req, res, next) => {
 
     const sanitizedFilename = xss(filename);
 
-    const fileExtension = path.extname(sanitizedFilename);
-    if (!['.jpg', '.jpeg', '.png', '.gif'].includes(fileExtension.toLowerCase())) {
-      return res.status(400).json("Invalid file type. Only image files are allowed");
-    }
-
     if (!sanitizedFilename || !filePath) {
       return res.status(400).json("No image provided");
     }
