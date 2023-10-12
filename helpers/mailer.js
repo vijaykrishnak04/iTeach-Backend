@@ -1,5 +1,5 @@
 import transporter from "../config/nodeMailer.js";
-import Otp from "../models/OtpSchema.js";
+import Otp from "../Models/OtpSchema.js";
 import dotenv from 'dotenv'
 dotenv.config()
 
