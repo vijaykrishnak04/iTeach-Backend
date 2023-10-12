@@ -12,7 +12,7 @@ export const addClass = async (req, res, next) => {
 
     name = xss(name);
     description = xss(description);
-    const parsedCoursePrice = parseFloat(coursePrice);
+    const parsedCoursePrice = parseFloat(price);
 
     if (isNaN(parsedCoursePrice)) {
       return res.status(400).json("Price should be a number");
