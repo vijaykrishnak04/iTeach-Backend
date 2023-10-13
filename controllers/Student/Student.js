@@ -77,7 +77,6 @@ export const editStudent = async (req, res, next) => {
         if (req.body.name) updateFields.fullName = xss(req.body.name);
         if (req.body.email) updateFields.email = xss(req.body.email);
         if (req.body.phoneNumber) updateFields.phoneNumber = xss(req.body.phoneNumber);
-        if (req.body.classRef) updateFields.classRef = xss(req.body.classRef);
         if (req.body.gender) updateFields.gender = xss(req.body.gender);
         if (req.body.dateOfBirth) updateFields.dateOfBirth = xss(req.body.dateOfBirth);
         if (req.body.address) updateFields.address = xss(req.body.address);
