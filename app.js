@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //cors options
 const corsOptions = {
-  origin: 'https://i-teach.netlify.app',
+  origin: ['https://i-teach.netlify.app','http://localhost:5173'],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204,

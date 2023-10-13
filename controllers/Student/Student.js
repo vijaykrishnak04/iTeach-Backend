@@ -56,20 +56,22 @@ export const checkIfStudentHasEnrolled = async (req, res, next) => {
 export const editStudent = async (req, res, next) => {
     try {
         const { id } = req.params;
-        
+
         if (!validator.isMongoId(id)) {
             return res.status(400).json('Invalid Id');
         }
-        
+
         const { 0: { filename = null, path = null } = {} } = req.files || {};
         const studentImage = (filename && path) ? { public_id: filename, url: path } : null;
 
         let updateFields = {};
-        
+
         if (studentImage) {
             updateFields.studentImage = studentImage;
-            // Assuming deleteFiles is an async function
-            await deleteFiles(studentImage?.public_id);
+        }
+
+        if (req.body.public_id) {
+            await deleteFiles([req.body.public_id]);
         }
 
         if (req.body.name) updateFields.fullName = xss(req.body.name);
@@ -80,13 +82,18 @@ export const editStudent = async (req, res, next) => {
         if (req.body.dateOfBirth) updateFields.dateOfBirth = xss(req.body.dateOfBirth);
         if (req.body.address) updateFields.address = xss(req.body.address);
 
-        const updateStatus = await Student.updateOne({ _id: id }, { $set: updateFields });
+        const updatedStudent = await Student.findOneAndUpdate(
+            { _id: id }, // find a document with that matches this filter
+            { $set: updateFields }, // apply these updates
+            { new: true, runValidators: true } // options: return the new version of the document and run model validations
+        );
 
-        if (updateStatus.modifiedCount === 0 || updateStatus.matchedCount === 0) {
+        if (!updatedStudent) {
             return res.status(404).json('No student was updated, possibly because the student was not found or no new data was provided.');
         }
 
-        return res.status(200).json('Student updated successfully');
+        return res.status(200).json({ success: true, student: updatedStudent });
+
 
     } catch (err) {
         console.log(err);
@@ -185,7 +192,7 @@ export const OtpVerification = async (req, res, next) => {
         // Delete the OTP record as it's no longer needed
         await Otp.deleteOne({ email });
 
-        return res.status(200).json({ message: "proceed to change password"});
+        return res.status(200).json({ message: "proceed to change password" });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ error: 'Internal Server Error' });
@@ -199,7 +206,7 @@ export const forgotChangePassword = async (req, res, next) => {
         const { newPassword } = req.body;
 
         // Find the student using the _id
-        const student = await Student.findOne({email: email});
+        const student = await Student.findOne({ email: email });
 
         // If student is not found, return an error
         if (!student) {

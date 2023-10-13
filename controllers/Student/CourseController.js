@@ -75,21 +75,30 @@ export const getCourse = async (req, res, next) => {
 
 export const purchaseCourse = async (studentId, courseId) => {
     try {
-        const updatedStudent = await Student.findOneAndUpdate(
-            { _id: studentId }, // find a document with this filter
-            { $addToSet: { courses: courseId } }, // add courseId to courses array if not already present
-            { new: true, runValidators: true } // options: return updated one, and run model validations
-        );
+        const [updatedStudent, course] = await Promise.all([
+            Student.findOneAndUpdate(
+                { _id: studentId },
+                { $addToSet: { courses: courseId } },
+                { new: true, runValidators: true }
+            ),
+            Course.findById(courseId)
+        ]);
 
         if (!updatedStudent) {
             throw new Error('Student not found');
         }
 
+        if (!course) {
+            throw new Error('Course not found');
+        }
+
+        return course;
+
     } catch (err) {
         console.log(err);
         throw new Error('Internal server error');
     }
-}
+};
 
 
 

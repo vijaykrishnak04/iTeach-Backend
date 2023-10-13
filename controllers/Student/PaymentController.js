@@ -66,8 +66,8 @@ export const verifyPayment = async (req, res, next) => {
             await paymentRecord.save();
 
             if (courseId) {
-                await purchaseCourse(studentId, courseId);
-                return res.status(200).json({ success: true, message: "Course purchased successfully" });
+                const course = await purchaseCourse(studentId, courseId);
+                return res.status(200).json({ success: true, message: "Course purchased successfully", course });
             }
             if (classId) {
                 const updatedStudent = await addOrChangeClass(studentId, classId);

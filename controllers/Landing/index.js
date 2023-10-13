@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from 'dotenv'
 import { sendMail } from '../../helpers/mailer.js'
-import Otp from "../../Models/OtpSchema.js"; 
+import Otp from "../../Models/OtpSchema.js";
 import Student from "../../Models/StudentSchema.js";
 import Banner from "../../Models/BannerSchema.js";
 import Course from "../../Models/CourseSchema.js";
@@ -19,14 +19,25 @@ export const signup = async (req, res, next) => {
 
     const isExist = await Student.findOne({
       $or: [
-        { fullname: fullName },
+        { fullName: fullName },
         { phoneNumber: phoneNumber },
         { email: email }
       ]
     });
+
     if (isExist) {
-      console.log("User exists");
-      return res.status(400).json({ error: "User with this name, phone, or email already exists" });
+      const existingFields = [];
+
+      if (isExist.fullName === fullName) {
+        existingFields.push("name");
+      }
+      if (isExist.phoneNumber === parseFloat(phoneNumber)) {
+        existingFields.push("phone number");
+      }
+      if (isExist.email === email) {
+        existingFields.push("email");
+      }
+      return res.status(400).json(existingFields);
     }
 
     await sendMail(email, fullName)
@@ -119,7 +130,7 @@ export const login = async (req, res, next) => {
       fullName: student.fullName,
     };
 
-    
+
     const token = jwt.sign(payload, process.env.USER_SECRET_KEY, {
       expiresIn: process.env.TOKEN_EXPIRATION_TIME || "7d",
     });
