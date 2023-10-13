@@ -7,7 +7,7 @@ export const getCourses = async (req, res, next) => {
 
         const student = await Student.findById(studentId, 'courses');
         if (!student) {
-            return res.status(404).json('Student not found');
+            return res.status(204).json('Student not found');
         }
 
         const courses = await Course.find({
