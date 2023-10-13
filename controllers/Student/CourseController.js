@@ -16,7 +16,7 @@ export const getCourses = async (req, res, next) => {
         });
 
         if (!courses || courses.length === 0) {
-            return res.status(404).json('No data found');
+            return res.status(204).json('No data found');
         }
 
         return res.status(200).json(courses);
@@ -44,7 +44,7 @@ export const getPurchasedCourses = async (req, res, next) => {
         const courses = student.courses;
 
         if (!courses || courses.length === 0) {
-            return res.status(404).json('No data found');
+            return res.status(204).json('No data found');
         }
 
         return res.status(200).json(courses);
@@ -62,7 +62,7 @@ export const getCourse = async (req, res, next) => {
         const id = req.params.id
         const course = await Course.findOne({ _id: id }, { isHidden: false });
         if (!course) {
-            return res.status(409).json('no course data found');
+            return res.status(204).json('no course data found');
         } else {
             return res.status(200).json(course);
         }

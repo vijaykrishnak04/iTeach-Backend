@@ -14,7 +14,7 @@ export const getSchedules = async (req, res, next) => {
         }
 
         if (schedules.schedules.length === 0) {
-            return res.status(404).json('No schedules data found for the provided IDs.');
+            return res.status(204).json('No schedules data found for the provided IDs.');
         } else {
             return res.status(200).json(schedules.schedules);
         }
@@ -55,7 +55,7 @@ export const getTodaySchedules = async (req, res, next) => {
         const todaySchedules = classObj.schedules;
 
         if (todaySchedules.length === 0) {
-            return res.status(404).json('No schedules found for today.');
+            return res.status(204).json('No schedules found for today.');
         } else {
             return res.status(200).json(todaySchedules);
         }

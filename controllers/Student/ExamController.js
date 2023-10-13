@@ -13,7 +13,7 @@ export const getExamsByIds = async (req, res, next) => {
 
         // Check if any exams were found
         if (exams.length === 0) {
-            return res.status(409).json('No exams data found for the provided IDs.');
+            return res.status(204).json('No exams data found for the provided IDs.');
         } else {
             return res.status(200).json(exams);
         }
