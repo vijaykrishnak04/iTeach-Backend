@@ -40,7 +40,9 @@ export const signup = async (req, res, next) => {
       return res.status(400).json(existingFields);
     }
 
-    await sendMail(email, fullName)
+    const OTP = `${Math.floor(100000 + Math.random() * 900000)}`;
+    await sendMail(email, fullName, OTP)
+   
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);

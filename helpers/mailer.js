@@ -3,8 +3,7 @@ import Otp from "../Models/OtpSchema.js";
 import dotenv from 'dotenv'
 dotenv.config()
 
-export async function sendMail(email, fullName) {
-  const OTP = `${Math.floor(100000 + Math.random() * 900000)}`;
+export async function sendMail(email, fullName, OTP) {
   const expirationTime = new Date(new Date().getTime() + 3 * 60 * 1000); // OTP expires in 3 minutes
   try {
     const otpData = { email, otp: OTP, expirationTime };
