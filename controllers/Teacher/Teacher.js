@@ -41,6 +41,7 @@ export const login = async (req, res, next) => {
       fullName: teacher.fullName,
       email: teacher.email,
       subject: teacher.subject,
+      teacherImage: teacher.teacherImage,
       token: `Bearer ${token}`,
     };
 
@@ -99,45 +100,45 @@ export const editProfile = async (req, res, next) => {
 
 export const changePassword = async (req, res, next) => {
   try {
-      // Getting the student's _id and credentials from the request
-      const { id } = req.params;
-      const { currentPassword, newPassword } = req.body;
+    // Getting the student's _id and credentials from the request
+    const { id } = req.params;
+    const { currentPassword, newPassword } = req.body;
 
-      // Find the student using the _id
-      const teacher = await Teacher.findById(id);
+    // Find the student using the _id
+    const teacher = await Teacher.findById(id);
 
-      // If student is not found, return an error
-      if (!teacher) {
-          return res.status(404).json('Teacher not found');
-      }
+    // If student is not found, return an error
+    if (!teacher) {
+      return res.status(404).json('Teacher not found');
+    }
 
-      // Check if the currentPassword matches the stored hash
-      const isMatch = await bcrypt.compare(currentPassword, teacher.password);
+    // Check if the currentPassword matches the stored hash
+    const isMatch = await bcrypt.compare(currentPassword, teacher.password);
 
-      if (!isMatch) {
-          return res.status(400).json('Incorrect current password');
-      }
+    if (!isMatch) {
+      return res.status(400).json('Incorrect current password');
+    }
 
-      // New password and current password should not be the same
-      if (newPassword === currentPassword) {
-          return res.status(400).json('New password should be different from the current password');
-      }
+    // New password and current password should not be the same
+    if (newPassword === currentPassword) {
+      return res.status(400).json('New password should be different from the current password');
+    }
 
-      // Hash the new password
-      const salt = await bcrypt.genSalt(10);
-      const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
 
-      // Update the password
-      teacher.password = hashedNewPassword;
+    // Update the password
+    teacher.password = hashedNewPassword;
 
-      // Save the updated student record to the database
-      await teacher.save();
+    // Save the updated student record to the database
+    await teacher.save();
 
-      return res.status(200).json('Password changed successfully');
+    return res.status(200).json('Password changed successfully');
 
   } catch (err) {
-      console.log(err);
-      return res.status(500).json('Internal server error');
+    console.log(err);
+    return res.status(500).json('Internal server error');
   }
 };
 

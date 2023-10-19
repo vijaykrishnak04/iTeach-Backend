@@ -47,7 +47,7 @@ export const getTodaySchedules = async (req, res, next) => {
         });
 
         if (!classObj) {
-            return res.status(404).json('No class found for the provided ID.');
+            return res.status(204).json('No class found for the provided ID.');
         }
 
 
