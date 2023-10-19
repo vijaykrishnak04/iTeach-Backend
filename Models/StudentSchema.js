@@ -35,6 +35,7 @@ const studentSchema = new mongoose.Schema(
             },
             url: {
                 type: String,
+                default: "https://res.cloudinary.com/dgolixx5b/image/upload/v1697729784/i-Teach/user_ikxh4c.png"
             },
         },
 
